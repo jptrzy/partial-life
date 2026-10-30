@@ -10,7 +10,7 @@
 #define MIN_DIS 2.0f
 #define MIN_DIS_FORCE 1.0f
 #define MAX_DIS 100.0f
-#define MAX_DIS_FORCE 10.0f
+#define MAX_DIS_FORCE 1000.0f
 
 #define REL_FORCE_MAX 10.0f
 #define REL_RANGE_MAX 10.0f
@@ -37,7 +37,7 @@ float frand() {
   return ((float) rand() / (float) RAND_MAX);
 }
 
-void state_update(State *state) {
+void state_update(State *state, float dt) {
   for (int k=0;k<state->rels_len;k++) {
     for (int b=0;b<state->balls_len;b++) {
       Ball *ball = &state->balls[k][b];
@@ -54,7 +54,7 @@ void state_update(State *state) {
           if (MIN_DIS > dis) {
             force = (MIN_DIS - dis) / MIN_DIS * MIN_DIS_FORCE;
           } else if (rel.range > dis) {
-              
+              // TODO
           }
 
           if (force == 0) continue;
@@ -71,8 +71,7 @@ void state_update(State *state) {
               _ball->vel,
               vec2f_scale(
                 dir,
-                // TODO scale by delta
-                1.0f*force/dis // trick to normalise a vector
+                1.0f*dt*force/dis // trick to normalise a vector
               )
           );
         }
@@ -93,10 +92,9 @@ void state_update(State *state) {
         ball->vel = vec2f_add(ball->vel, vec2f_scale(ball->pos, -force/dis));
       }
 
-      // TODO scale by delta
-      ball->pos = vec2f_add(ball->pos, vec2f_scale(ball->vel, 1.0f));
+      ball->pos = vec2f_add(ball->pos, vec2f_scale(ball->vel, dt));
 
-      ball->vel = vec2f_scale(ball->vel, 0.9f);
+      ball->vel = vec2f_scale(ball->vel, dt*0.9f);
     }
   }
 }
@@ -137,9 +135,9 @@ int main(void) {
   //camera.zoom = 1.0f;
 
   while (!WindowShouldClose()) {
-    state_update(&state);
+    state_update(&state, GetFrameTime());
 
-    printf("%f\n", state.balls[0][0].pos.x);
+    //printf("%f\n", state.balls[0][0].pos.x);
 
     BeginDrawing();
       ClearBackground(RAYWHITE);
