@@ -1,0 +1,4 @@
+.cache/
+raylib/
+partial_life
+compile_commands.json
