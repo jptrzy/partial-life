@@ -8,12 +8,12 @@
 #define BALLS_MAX 1024
 
 #define MIN_DIS 2.0f
-#define MIN_DIS_FORCE 1.0f
+#define MIN_DIS_FORCE 10.0f
 #define MAX_DIS 100.0f
 #define MAX_DIS_FORCE 1000.0f
 
-#define REL_FORCE_MAX 10.0f
-#define REL_RANGE_MAX 10.0f
+#define REL_FORCE_MAX 100.0f
+#define REL_RANGE_MAX 20.0f
 
 // Relations
 typedef struct {
@@ -54,6 +54,7 @@ void state_update(State *state, float dt) {
           if (MIN_DIS > dis) {
             force = (MIN_DIS - dis) / MIN_DIS * MIN_DIS_FORCE;
           } else if (rel.range > dis) {
+            force = rel.force;
               // TODO
           }
 
@@ -84,7 +85,6 @@ void state_update(State *state, float dt) {
     for (int b=0;b<state->balls_len;b++) {
       Ball *ball = &state->balls[k][b];
 
-
       float dis = vec2f_len(ball->pos);
       if (dis > MAX_DIS) {
         float force = (dis - MAX_DIS) / MAX_DIS * MAX_DIS_FORCE;
@@ -101,12 +101,20 @@ void state_update(State *state, float dt) {
 
 void state_draw(State *state) {
   DrawCircleLines(0, 0, MAX_DIS, ORANGE);
-  
+
+  Color colors[] = {RED, GREEN, BLUE, PURPLE, VIOLET, GRAY};
+
+  if (KINDS_MAX > (sizeof(colors) / sizeof (Color))) {
+    // Could it be check by a preprocessor
+    fprintf(stderr, "Not enough colors for all kinds\n");
+    return;
+  }
+
   for (int k=0;k<state->rels_len;k++) {
     for (int b=0;b<state->balls_len;b++) {
       Ball *ball = &state->balls[k][b];
 
-      DrawCircleV(*(Vector2*)&(ball->pos), 2.0f, RED);
+      DrawCircleV(*(Vector2*)&(ball->pos), 2.0f, colors[k]);
     }
   }
 }
@@ -114,35 +122,71 @@ void state_draw(State *state) {
 void state_rel_rand(State *state, float scale) {
   for (int k=0;k<state->rels_len;k++) {
     for (int _k=0;_k<state->rels_len;_k++) {
-      state->rels[k][_k].force = frand() * REL_FORCE_MAX;
+      state->rels[k][_k].force = (frand()-0.5) * 2 * REL_FORCE_MAX;
       state->rels[k][_k].range = frand() * REL_RANGE_MAX;
+    }
+  }
+}
+
+void state_balls_reset(State *state) {
+  for (int k=0;k<state->rels_len;k++) {
+    for (int b=0;b<state->balls_len;b++) {
+      Ball *ball = &state->balls[k][b];
+
+
+      float angle = 6.28f * frand();
+      ball->pos.x = cosf(angle);
+      ball->pos.y = sinf(angle);
+      ball->pos = vec2f_scale(ball->pos, frand() * MAX_DIS);
+
+      ball->vel = VEC2f_ZERO;
     }
   }
 }
 
 int main(void) {
   State state = {0};
-  state.balls_len = 16;
+  state.balls_len = 256;
   state.rels_len = 4;
+
+  state_balls_reset(&state);
 
   InitWindow(320, 320, "Partial Life");
   SetTargetFPS(60);
 
-  //Camera2D camera = { 0 };
-  //camera.target = (Vector2){ player.x + 20.0f, player.y + 20.0f };
-  //camera.offset = (Vector2){ GetRenderWidth()/2.0f, GetRenderHeight()/2.0f };
-  //camera.rotation = 0.0f;
-  //camera.zoom = 1.0f;
+  Camera2D camera = { 0 };
+  camera.target = (Vector2){ 0.0f, 0.0f };
+  camera.offset = (Vector2){ GetRenderWidth()/2.0f, GetRenderHeight()/2.0f };
+  camera.rotation = 0.0f;
+  camera.zoom = 1.0f;
+
+  bool debug_rel = true;
 
   while (!WindowShouldClose()) {
     state_update(&state, GetFrameTime());
 
     //printf("%f\n", state.balls[0][0].pos.x);
 
+    if (IsKeyPressed(KEY_R)) state_rel_rand(&state, 1.0f);
+    if (IsKeyPressed(KEY_ZERO)) state_rel_rand(&state, 0.0f);
+    if (IsKeyPressed(KEY_E)) debug_rel = !debug_rel;
+    if (IsKeyPressed(KEY_Q)) state_balls_reset(&state);
+
     BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      state_draw(&state);
+      BeginMode2D(camera);
+        state_draw(&state);
+      EndMode2D();
+
+      if (debug_rel) {
+        for (int k=0;k<state.rels_len;k++) {
+          for (int _k=0;_k<state.rels_len;_k++) {
+            Rel rel = state.rels[k][_k];
+            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, BLACK);
+          }
+        }
+      }
     EndDrawing();
   }
 

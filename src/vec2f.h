@@ -8,6 +8,8 @@ typedef struct {
   float y;
 } Vec2f;
 
+#define VEC2f_ZERO ((Vec2f) {.x=0.0f, .y=0.0f})
+
 Vec2f vec2f_add(Vec2f a, Vec2f b) {
   return (Vec2f) {.x = a.x + b.x, .y = a.y + b.y};
 }
