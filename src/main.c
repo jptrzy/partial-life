@@ -1,8 +1,13 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "raylib.h"
+#define RINI_IMPLEMENTATION
+#define RINI_MAX_TEXT_FILE_SIZE 4096*2
+#include "rini.h"
 
 #include "vec2f.h"
+
+#define VERSION 1
 
 #define KINDS_MAX 8
 #define BALLS_MAX 1024
@@ -55,18 +60,18 @@ void state_update(State *state, float dt) {
 
           Rel rel = state->rels[k][_k];
           float force = 0;
+
           if (MIN_DIS > dis) {
             force = (MIN_DIS - dis) / MIN_DIS * MIN_DIS_FORCE;
           } else if (rel.range > dis) {
             force = rel.force;
-              // TODO
           }
 
           if (force == 0) continue;
 
           Vec2f dir = vec2f_sub(_ball->pos, ball->pos);
           if (dis == 0) {
-            dis = 1e-6f;
+            dis = 1.0f;
             float angle = 6.28f * frand();
             dir.x = cosf(angle);
             dir.y = sinf(angle);
@@ -84,7 +89,6 @@ void state_update(State *state, float dt) {
     }
   }
 
-
   for (int k=0;k<state->rels_len;k++) {
     for (int b=0;b<state->balls_len;b++) {
       Ball *ball = &state->balls[k][b];
@@ -96,14 +100,15 @@ void state_update(State *state, float dt) {
         ball->vel = vec2f_add(ball->vel, vec2f_scale(ball->pos, -force/dis));
       }
 
+      float force = 0.1f;
+      ball->vel = vec2f_add(ball->vel, vec2f_scale(ball->pos, -force/dis));
+
       ball->pos = vec2f_add(ball->pos, vec2f_scale(ball->vel, dt));
 
       //ball->vel = vec2f_scale(ball->vel, dt*0.9f);
       ball->vel = vec2f_scale(ball->vel, powf(0.1f, dt));
     }
   }
-
-  printf("%f\n", dt);
 }
 
 void state_draw(State *state) {
@@ -151,6 +156,81 @@ void state_balls_reset(State *state) {
   }
 }
 
+#define SNAP_FLOAT_RES (1000.0f)
+
+int state_load_snap(State *state) {
+  char* str = GetClipboardText();
+
+  rini_data snap = rini_load_from_memory(str);
+
+  int ver = rini_get_value(snap, "VERSION");
+
+  if (ver != VERSION) {
+    fprintf(stderr, "Version doesn't match\n");
+    return 1;
+  }
+
+  int len = rini_get_value(snap, "RELATIONS");
+
+  if (len > KINDS_MAX) {
+    fprintf(stderr, "Too many kinds\n");
+    return 2;
+  }
+
+  for (int k=0;k<len;k++) {
+    for (int _k=0;_k<len;_k++) {
+      state->rels[k][_k].range = rini_get_value(snap,
+          TextFormat("RELATION_OF_%d_TO_%d_RANGE", k, _k));
+      state->rels[k][_k].range /= SNAP_FLOAT_RES;
+
+      state->rels[k][_k].force = rini_get_value(snap,
+          TextFormat("RELATION_OF_%d_TO_%d_FORCE", k, _k));
+      state->rels[k][_k].force /= SNAP_FLOAT_RES;
+    }
+  }
+
+  state->rels_len = len;
+  state->balls_len = rini_get_value(snap, "BALLS");
+
+  return 0;
+}
+
+int state_save_snap(State *state) {
+  rini_data snap = rini_load(NULL);
+
+  rini_set_comment_line(&snap, "");
+  rini_set_comment_line(&snap, "Partial Life Snapshot");
+  rini_set_comment_line(&snap, "");
+
+  rini_set_value(&snap, "VERSION", VERSION, "Version of the snapshot");
+  rini_set_value(&snap, "BALLS", state->balls_len, "Amount of balls per kind");
+  rini_set_value(&snap, "RELATIONS", state->rels_len,
+                 "Amount of relations/kinds");
+
+  if (state->rels_len > 9) {
+    fprintf(stderr, "More kinds then expected for the buffer space\n");
+    return 1;
+  }
+
+  rini_set_comment_line(&snap, "");
+  rini_set_comment_line(&snap, "RELATION_A_B_RANGE -> Minimal range between A and B to apply relation force");
+  rini_set_comment_line(&snap, "RELATION_A_B_FORCE -> Force applied on B, if it is in range of A");
+  rini_set_comment_line(&snap, "");
+
+  for (int k=0;k<state->rels_len;k++) {
+    for (int _k=0;_k<state->rels_len;_k++) {
+      rini_set_value(&snap, TextFormat("RELATION_OF_%d_TO_%d_RANGE", k, _k),
+                     state->rels[k][_k].range * SNAP_FLOAT_RES, "");
+      rini_set_value(&snap, TextFormat("RELATION_OF_%d_TO_%d_FORCE", k, _k),
+                     state->rels[k][_k].force * SNAP_FLOAT_RES, "");
+    }
+  }
+
+  char* str = rini_save_to_memory(snap);
+  SetClipboardText(str);
+  return 0;
+}
+
 int main(void) {
   State state = {0};
   state.balls_len = 258;
@@ -184,6 +264,9 @@ int main(void) {
     if (IsKeyPressed(KEY_ZERO)) state_rel_rand(&state, 0.0f);
     if (IsKeyPressed(KEY_E)) debug_rel = !debug_rel;
     if (IsKeyPressed(KEY_Q)) state_balls_reset(&state);
+    if (IsKeyPressed(KEY_C)) state_save_snap(&state);
+    if (IsKeyPressed(KEY_V)) state_load_snap(&state);
+
 
     BeginDrawing();
       ClearBackground(RAYWHITE);
