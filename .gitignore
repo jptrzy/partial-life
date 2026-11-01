@@ -1,4 +1,7 @@
 .cache/
+
 raylib/
+rini/
+
 partial_life
 compile_commands.json

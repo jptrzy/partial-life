@@ -2,8 +2,8 @@ TARGET = partial_life
 
 
 CC = clang
-
-CCFLAGS = -Wall -Wextra -std=c23 -pedantic -Weverything -Iraylib/src
+#  -Weverything
+CCFLAGS = -Wall -Wextra -std=c23 -pedantic -O2 -g3 -ggdb -Iraylib/src -Irini/src
 LDFLAGS = 
 
 UNAME_S := $(shell uname -s)
