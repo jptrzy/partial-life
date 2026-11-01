@@ -4,16 +4,20 @@
 
 #include "vec2f.h"
 
-#define KINDS_MAX 4
+#define KINDS_MAX 8
 #define BALLS_MAX 1024
 
-#define MIN_DIS 2.0f
-#define MIN_DIS_FORCE 10.0f
+#define MIN_DIS 4.0f
+#define MIN_DIS_FORCE 100.0f
 #define MAX_DIS 100.0f
-#define MAX_DIS_FORCE 1000.0f
+#define MAX_DIS_FORCE 100.0f
 
 #define REL_FORCE_MAX 100.0f
 #define REL_RANGE_MAX 20.0f
+
+#define MAX(a, b) (a > b ? a : b)
+#define MIN(a, b) (a < b ? a : b)
+
 
 // Relations
 typedef struct {
@@ -94,15 +98,18 @@ void state_update(State *state, float dt) {
 
       ball->pos = vec2f_add(ball->pos, vec2f_scale(ball->vel, dt));
 
-      ball->vel = vec2f_scale(ball->vel, dt*0.9f);
+      //ball->vel = vec2f_scale(ball->vel, dt*0.9f);
+      ball->vel = vec2f_scale(ball->vel, powf(0.1f, dt));
     }
   }
+
+  printf("%f\n", dt);
 }
 
 void state_draw(State *state) {
   DrawCircleLines(0, 0, MAX_DIS, ORANGE);
 
-  Color colors[] = {RED, GREEN, BLUE, PURPLE, VIOLET, GRAY};
+  Color colors[] = {RED, GREEN, BLUE, PURPLE, VIOLET, GRAY, PINK, LIME};
 
   if (KINDS_MAX > (sizeof(colors) / sizeof (Color))) {
     // Could it be check by a preprocessor
@@ -122,8 +129,8 @@ void state_draw(State *state) {
 void state_rel_rand(State *state, float scale) {
   for (int k=0;k<state->rels_len;k++) {
     for (int _k=0;_k<state->rels_len;_k++) {
-      state->rels[k][_k].force = (frand()-0.5) * 2 * REL_FORCE_MAX;
-      state->rels[k][_k].range = frand() * REL_RANGE_MAX;
+      state->rels[k][_k].force = scale * (frand()-0.5) * 2 * REL_FORCE_MAX;
+      state->rels[k][_k].range = scale * frand() * REL_RANGE_MAX;
     }
   }
 }
@@ -146,15 +153,16 @@ void state_balls_reset(State *state) {
 
 int main(void) {
   State state = {0};
-  state.balls_len = 256;
+  state.balls_len = 258;
   state.rels_len = 4;
 
   state_balls_reset(&state);
 
   InitWindow(320, 320, "Partial Life");
   SetTargetFPS(60);
+  SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-  Camera2D camera = { 0 };
+  Camera2D camera = {0};
   camera.target = (Vector2){ 0.0f, 0.0f };
   camera.offset = (Vector2){ GetRenderWidth()/2.0f, GetRenderHeight()/2.0f };
   camera.rotation = 0.0f;
@@ -163,9 +171,14 @@ int main(void) {
   bool debug_rel = true;
 
   while (!WindowShouldClose()) {
-    state_update(&state, GetFrameTime());
+    if (IsWindowResized()) {
+      camera.offset = (Vector2){GetRenderWidth()/2.0f, GetRenderHeight()/2.0f};
 
-    //printf("%f\n", state.balls[0][0].pos.x);
+      float val = MIN(camera.offset.x, camera.offset.y);
+      camera.zoom = val / (MAX_DIS * 1.1f);
+    }
+
+    state_update(&state, GetFrameTime());
 
     if (IsKeyPressed(KEY_R)) state_rel_rand(&state, 1.0f);
     if (IsKeyPressed(KEY_ZERO)) state_rel_rand(&state, 0.0f);
@@ -186,6 +199,8 @@ int main(void) {
             DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, BLACK);
           }
         }
+      } else {
+        DrawFPS(0, 0);
       }
     EndDrawing();
   }
