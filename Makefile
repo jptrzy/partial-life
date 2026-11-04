@@ -34,7 +34,7 @@ endif
 RAYLIB_STATIC = raylib/src/libraylib.a
 RAYLIB_WEB    = raylib/src/libraylib.web.a
 
-all: build
+all: _build
 
 $(RAYLIB_STATIC):
 	$(MAKE) -C raylib/src PLATFORM=PLATFORM_DESKTOP
@@ -42,7 +42,7 @@ $(RAYLIB_STATIC):
 $(RAYLIB_WEB):
 	$(MAKE) -C raylib/src PLATFORM=PLATFORM_WEB
 
-build: $(RAYLIB_STATIC)
+_build: $(RAYLIB_STATIC)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CCFLAGS) src/main.c -o $(BUILD_DIR)/$(TARGET) $(RAYLIB_STATIC) $(RAYLIB_LIBS) $(LDFLAGS)
 
@@ -57,5 +57,5 @@ clean:
 	$(MAKE) -C raylib/src clean
 	rm -f $(BUILD_DIR)
 
-run: build
+run: _build
 	./$(BUILD_DIR)/$(TARGET)

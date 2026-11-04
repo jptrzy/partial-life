@@ -159,7 +159,7 @@ void state_balls_reset(State *state) {
 #define SNAP_FLOAT_RES (1000.0f)
 
 int state_load_snap(State *state) {
-  char* str = GetClipboardText();
+  const char* str = GetClipboardText();
 
   rini_data snap = rini_load_from_memory(str);
 
@@ -248,7 +248,7 @@ int main(void) {
   camera.rotation = 0.0f;
   camera.zoom = 1.0f;
 
-  bool debug_rel = true;
+  int debug_ui = 3;
 
   while (!WindowShouldClose()) {
     if (IsWindowResized()) {
@@ -262,10 +262,14 @@ int main(void) {
 
     if (IsKeyPressed(KEY_R)) state_rel_rand(&state, 1.0f);
     if (IsKeyPressed(KEY_ZERO)) state_rel_rand(&state, 0.0f);
-    if (IsKeyPressed(KEY_E)) debug_rel = !debug_rel;
     if (IsKeyPressed(KEY_Q)) state_balls_reset(&state);
     if (IsKeyPressed(KEY_C)) state_save_snap(&state);
     if (IsKeyPressed(KEY_V)) state_load_snap(&state);
+
+    if (IsKeyPressed(KEY_ONE)) debug_ui = 0;
+    if (IsKeyPressed(KEY_TWO)) debug_ui = 1;
+    if (IsKeyPressed(KEY_THREE)) debug_ui = 2;
+    if (IsKeyPressed(KEY_H)) debug_ui = 3;
 
 
     BeginDrawing();
@@ -275,16 +279,35 @@ int main(void) {
         state_draw(&state);
       EndMode2D();
 
-      if (debug_rel) {
+      if (debug_ui == 1) {
+        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, BLACK);
+      } else if (debug_ui == 2) {
         for (int k=0;k<state.rels_len;k++) {
           for (int _k=0;_k<state.rels_len;_k++) {
             Rel rel = state.rels[k][_k];
             DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, BLACK);
           }
         }
-      } else {
-        DrawFPS(0, 0);
+      } else if (debug_ui == 3) {
+        const char buffer[][64] = {
+          "Shortcuts:",
+          "R - randomise relations",
+          "0 - zero relations",
+          "E - randomise position",
+          "",
+          "C - save snapshot to clipboard",
+          "V - load snapshot from clipboard",
+          "",
+          "1 - UI diable",
+          "2 - UI fps",
+          "3 - UI relations",
+          "H - UI shortcuts / help",
+        };
+        for (unsigned int i=0; i < (sizeof(buffer) / sizeof(*buffer)); i++) {
+          DrawText(buffer[i], 2, 10 * i, 10, BLACK);
+        }
       }
+
     EndDrawing();
   }
 
