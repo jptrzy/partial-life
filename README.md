@@ -7,11 +7,28 @@ Funny enough I wasn't alone, so you might find similar project under a name
 *Particle Life* or some other variants.
 
 # Building
-Current makefile only works for MacOS, so on apple devices just run `make run`.
+Windows and Linux are not implemented and are not planned -> you may implement
+those yourself.
 
-If you use something else it should be quite easy.
-If you use other OS, then you just need to hack it - which should be quite easy,
-looking how raylib is the only dependency.
+## Macos
+```
+meson setup build
+meson compile -C build
+./build/partial_life
+```
+
+## Web
+```
+meson setup build-web --cross-file web.ini
+meson compile -C build-web
+python3 -m http.server
+```
+
+## Helpfull
+```
+meson subprojects download
+
+```
 
 # License
 All right reserved.

@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/raysan5/rini
+revision = b31299434c785d0f2bd82f36b5bfd2fd36ba1216
+depth = 1
+patch_directory = rini
