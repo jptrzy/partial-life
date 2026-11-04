@@ -1,7 +1,9 @@
 .cache/
+.DS_Store
+
+build/
 
 raylib/
 rini/
 
-partial_life
 compile_commands.json
