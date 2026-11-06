@@ -5,6 +5,7 @@
 #define RINI_MAX_TEXT_FILE_SIZE 4096*2
 #include "rini.h"
 
+#include "pal_arthur.h"
 #include "vec2f.h"
 
 #define VERSION 1
@@ -112,11 +113,11 @@ void state_update(State *state, float dt) {
 }
 
 void state_draw(State *state) {
-  DrawCircleLines(0, 0, MAX_DIS, ORANGE);
+  DrawCircleLines(0, 0, MAX_DIS, palette[5]);
 
-  Color colors[] = {RED, GREEN, BLUE, PURPLE, VIOLET, GRAY, PINK, LIME};
+  Color *colors = palette + 8;
 
-  if (KINDS_MAX > (sizeof(colors) / sizeof (Color))) {
+  if (KINDS_MAX > 16) {
     // Could it be check by a preprocessor
     fprintf(stderr, "Not enough colors for all kinds\n");
     return;
@@ -238,9 +239,12 @@ int main(void) {
 
   state_balls_reset(&state);
 
-  InitWindow(320, 320, "Partial Life");
+  InitWindow(320, 240, "Partial Life");
   SetTargetFPS(60);
   SetWindowState(FLAG_WINDOW_RESIZABLE);
+
+  Image icon = LoadImage("icon-32.png");
+  SetWindowIcon(icon);
 
   Camera2D camera = {0};
   camera.target = (Vector2){ 0.0f, 0.0f };
@@ -273,19 +277,19 @@ int main(void) {
 
 
     BeginDrawing();
-      ClearBackground(RAYWHITE);
+      ClearBackground(palette[7]);
 
       BeginMode2D(camera);
         state_draw(&state);
       EndMode2D();
 
       if (debug_ui == 1) {
-        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, BLACK);
+        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, palette[0]);
       } else if (debug_ui == 2) {
         for (int k=0;k<state.rels_len;k++) {
           for (int _k=0;_k<state.rels_len;_k++) {
             Rel rel = state.rels[k][_k];
-            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, BLACK);
+            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, palette[0]);
           }
         }
       } else if (debug_ui == 3) {
@@ -304,12 +308,13 @@ int main(void) {
           "H - UI shortcuts / help",
         };
         for (unsigned int i=0; i < (sizeof(buffer) / sizeof(*buffer)); i++) {
-          DrawText(buffer[i], 2, 10 * i, 10, BLACK);
+          DrawText(buffer[i], 2, 10 * i, 10, palette[0]);
         }
       }
 
     EndDrawing();
   }
 
+  UnloadImage(icon);
   CloseWindow();
 }
