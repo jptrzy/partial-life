@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="EN-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <title>raylib web game</title>
+
+    <meta name="title" content="raylib web game">
+    <meta name="description" content="New raylib web videogame, developed using raylib videogames library">
+    <meta name="keywords" content="raylib, programming, examples, html5, C, C++, library, learn, games, videogames">
+    <meta name="viewport" content="width=device-width">
+
+    <!-- Open Graph metatags for sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="raylib web game">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image" content="https://www.raylib.com/common/raylib_logo.png">
+    <meta property="og:image:alt" content="New raylib web videogame, developed using raylib videogames library" />
+    <meta property="og:site_name" content="raylib - example">
+    <meta property="og:url" content="https://www.raylib.com/games.html">
+    <meta property="og:description" content="New raylib web videogame, developed using raylib videogames library">
+
+    <!-- Twitter metatags for sharing -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@raysan5">
+    <meta name="twitter:title" content="raylib web game">
+    <meta name="twitter:image" content="https://www.raylib.com/common/raylib_logo.png">
+    <meta name="twitter:image:alt" content="New raylib web videogame, developed using raylib videogames library">
+    <meta name="twitter:url" content="https://www.raylib.com/games.html">
+    <meta name="twitter:description" content="New raylib web videogame, developed using raylib videogames library">
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="https://www.raylib.com/favicon.ico">
+
+    <style>
+      :root {
+        /*https://github.com/tinted-theming/schemes/blob/spec-0.11/base24/arthur.yaml*/
+        --base00: #1c1c1c;
+        --base01: #3d352a;
+        --base02: #554444;
+        --base03: #6e5d59;
+        --base04: #88776e;
+        --base05: #a19083;
+        --base06: #bbaa99;
+        --base07: #ddccbb;
+
+        --base08: #cd5c5c;
+        --base09: #e8ae5b;
+        --base0A: #87ceeb;
+        --base0B: #86af80;
+        --base0C: #b0c4de;
+        --base0D: #6495ed;
+        --base0E: #deb887;
+        --base0F: #662e2e;
+
+        --base10: #382d2d;
+        --base11: #1c1616;
+        --base12: #cc5533;
+        --base13: #ffa75d;
+        --base14: #88aa22;
+        --base15: #b0c4de;
+        --base16: #87ceeb;
+        --base17: #996600;
+      }
+  
+      article {
+        max-width: 800px;
+        background: var(--base02);
+        color: var(--base06);
+        padding: 10px;
+        margin: 10px auto;
+      }
+
+      body {
+        background-color: var(--base00);
+        position: relative;
+
+        color: var(--base07);
+        font-family: arial; margin: 0; padding: unset;
+      }
+
+      body::after {
+        content: "created with pain and suffering";
+        color: #000a;
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+
+        opacity: 0.2;              /* ← the "little bit" knob */
+        mix-blend-mode: overlay;    /* or soft-light / screen */
+      }
+
+      #header {
+        width: 100%;
+        height: 80px;
+        background-color: var(--base02);
+      }
+
+      /* NOTE: raylib logo is embedded in the page as base64 png image */
+      #logo {
+        width:64px;
+        height:64px;
+        float:left;
+        position:relative;
+        margin:10px;
+        background: url('icon_32.png') no-repeat ;
+        background-size: contain;
+        image-rendering: pixelated;
+        
+      }
+
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      div.emscripten { text-align: center; }
+      div.emscripten_border { border: 1px solid var(--em-back); }
+
+      /* NOTE: Canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten {
+        border: 0px none;
+        background: var(--base02);
+        width: 100%;
+      }
+
+      .spinner {
+        height: 30px;
+        width: 30px;
+        margin: 0;
+        margin-top: 20px;
+        margin-left: 20px;
+        display: inline-block;
+        vertical-align: top;
+        -webkit-animation: rotation .8s linear infinite;
+        -moz-animation: rotation .8s linear infinite;
+        -o-animation: rotation .8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+        border-left: 5px solid var(--base03);
+        border-right: 5px solid var(--base03);
+        border-bottom: 5px solid var(--base03);
+        border-top: 5px solid var(--base09);
+        border-radius: 100%;
+        /*background-color: var(--spin-in);*/
+      }
+      @-webkit-keyframes rotation {
+        from {-webkit-transform: rotate(0deg);}
+        to {-webkit-transform: rotate(360deg);}
+      }
+      @-moz-keyframes rotation {
+        from {-moz-transform: rotate(0deg);}
+        to {-moz-transform: rotate(360deg);}
+      }
+      @-o-keyframes rotation {
+        from {-o-transform: rotate(0deg);}
+        to {-o-transform: rotate(360deg);}
+      }
+      @keyframes rotation {
+        from {transform: rotate(0deg);}
+        to {transform: rotate(360deg);}
+      }
+
+      #status {
+        display: inline-block;
+        vertical-align: top;
+        margin-top: 30px;
+        margin-left: 20px;
+        font-weight: bold;
+        color: var(--base06);
+      }
+
+      #progress {
+        height: 0px;
+        width: 0px;
+      }
+
+      #controls {
+        display: inline-block;
+        float: right;
+        vertical-align: top;
+        margin-top: 15px;
+        margin-right: 20px;
+      }
+
+      #output {
+        border-left: 0px none;
+        border-right: 0px none;
+        border-bottom: 0px none;
+        padding-left: 0;
+        padding-right: 0;
+        width: 100%;
+        height: 140px;
+        margin: 0 auto;
+        margin-top: 10px;
+        display: block;
+        background-color: var(--base01);
+        color: var(--base06);
+        font-family: 'Lucida Console', Monaco, monospace;
+        outline: none;
+      }
+
+      input[type=button] {
+        background-color: var(--base04);
+        border: 4px solid var(--base03);
+        color: var(--base06);
+        text-decoration: none;
+        cursor: pointer;
+        width: 140px;
+        height: 50px;
+        margin-left: 10px;
+      }
+
+      input[type=button]:hover {
+        background-color: var(--base03);
+        border-color: var(--base04);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header">
+        <a id="logo" href="https://www.raylib.com"></a>
+
+        <div class="spinner" id='spinner'></div>
+        <div class="emscripten" id="status">Downloading...</div>
+
+        <span id='controls'>
+          <span><input type="button" value="📜 SOURCE CODE" onclick="location.href='https://github.com/raysan5/raylib';"/></span>
+          <span><input type="button" value="⌞⌝ FULLSCREEN" onclick="Module.canvas.requestFullscreen()"></span>
+          <span><input type="button" id="btn-audio" value="🔇 MUTE" onclick="toggleAudio()"></span>
+        </span>
+
+        <div class="emscripten">
+          <progress value="0" max="100" id="progress" hidden=1></progress>
+        </div>
+    </div>
+
+    <div class="emscripten_border">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    </div>
+
+    <textarea id="output" rows="8"></textarea>
+
+    <script type='text/javascript' src="https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js/dist/FileSaver.min.js"> </script>
+    <script type='text/javascript'>
+        function saveFileFromMEMFSToDisk(memoryFSname, localFSname)     // This can be called by C/C++ code
+        {
+            var isSafari = false; // Not supported, navigator.userAgent access is being restricted
+            //var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            var data = FS.readFile(memoryFSname);
+            var blob;
+
+            if (isSafari) blob = new Blob([data.buffer], { type: "application/octet-stream" });
+            else blob = new Blob([data.buffer], { type: "application/octet-binary" });
+
+            // NOTE: SaveAsDialog is a browser setting. For example, in Google Chrome,
+            // in Settings/Advanced/Downloads section you have a setting:
+            // 'Ask where to save each file before downloading' - which you can set true/false.
+            // If you enable this setting it would always ask you and bring the SaveAsDialog
+            saveAs(blob, localFSname);
+        }
+    </script>
+    <script type='text/javascript'>
+        var statusElement = document.querySelector('#status');
+        var progressElement = document.querySelector('#progress');
+        var spinnerElement = document.querySelector('#spinner');
+        var Module = {
+            preRun: [],
+            postRun: [],
+            print: (function() {
+                var element = document.querySelector('#output');
+
+                if (element) element.value = '';    // Clear browser cache
+
+                return function(text) {
+                    if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                    // These replacements are necessary if you render to raw HTML
+                    //text = text.replace(/&/g, "&amp;");
+                    //text = text.replace(/</g, "&lt;");
+                    //text = text.replace(/>/g, "&gt;");
+                    //text = text.replace('\n', '<br>', 'g');
+                    console.log(text);
+
+                    if (element) {
+                        element.value += text + "\n";
+                        element.scrollTop = element.scrollHeight; // focus on bottom
+                    }
+                };
+            })(),
+            printErr: function(text) {
+                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+
+                console.error(text);
+            },
+            canvas: (function() {
+                var canvas = document.querySelector('#canvas');
+
+                // As a default initial behavior, pop up an alert when webgl context is lost.
+                // To make your application robust, you may want to override this behavior before shipping!
+                // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+                canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+
+                return canvas;
+            })(),
+            setStatus: function(text) {
+                if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+                if (text === Module.setStatus.last.text) return;
+
+                var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+                var now = Date.now();
+
+                if (m && now - Module.setStatus.last.time < 30) return; // If this is a progress update, skip it if too soon
+
+                Module.setStatus.last.time = now;
+                Module.setStatus.last.text = text;
+
+                if (m) {
+                    text = m[1];
+                    progressElement.value = parseInt(m[2])*100;
+                    progressElement.max = parseInt(m[4])*100;
+                    progressElement.hidden = true;
+                    spinnerElement.hidden = false;
+                } else {
+                    progressElement.value = null;
+                    progressElement.max = null;
+                    progressElement.hidden = true;
+                    if (!text) spinnerElement.style.display = 'none';
+                }
+
+                statusElement.innerHTML = text;
+            },
+            totalDependencies: 0,
+            monitorRunDependencies: function(left) {
+                this.totalDependencies = Math.max(this.totalDependencies, left);
+                Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+            },
+            //noInitialRun: true
+        };
+
+        Module.setStatus('Downloading...');
+
+        window.onerror = function() {
+            Module.setStatus('Exception thrown, see JavaScript console');
+            spinnerElement.style.display = 'none';
+            Module.setStatus = function(text) { if (text) Module.printErr('[post-exception status] ' + text); };
+        };
+    </script>
+
+    <!-- REF: https://developers.google.com/web/updates/2018/11/web-audio-autoplay -->
+    <script type='text/javascript'>
+        var audioBtn = document.querySelector('#btn-audio');
+
+        // An array of all contexts to resume on the page
+        const audioContexList = [];
+        (function() {
+            // A proxy object to intercept AudioContexts and
+            // add them to the array for tracking and resuming later
+            self.AudioContext = new Proxy(self.AudioContext, {
+                construct(target, args) {
+                    const result = new target(...args);
+                    audioContexList.push(result);
+                    if (result.state == "suspended") audioBtn.value = "🔈 RESUME";
+                    return result;
+                }
+            });
+        })();
+
+        function toggleAudio() {
+            var resumed = false;
+            audioContexList.forEach(ctx => {
+                if (ctx.state == "suspended") { ctx.resume(); resumed = true; }
+                else if (ctx.state == "running") ctx.suspend();
+            });
+
+            if (resumed) audioBtn.value = "🔇 MUTE";
+            else audioBtn.value = "🔈 RESUME";
+        }
+    </script>
+
+    <article>
+    @README@
+    </article>
+
+    <script src="partial_life.js"></script>
+
+  </body>
+</html>

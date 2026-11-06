@@ -68,16 +68,37 @@ elif host_machine.system() == 'darwin'
 endif
 
 if host_machine.system() == 'emscripten'
+  shell_path = meson.project_source_root() / 'src/shell.html'
 
-  shell_path = meson.project_source_root() / 'subprojects/raylib/src/minshell.html'
-  custom_target('partial_life_html',
-    output: 'partial_life.html',
-    command: [
-      'bash', '-c',
-      'sed \'s|{{{ SCRIPT }}}|<script src="partial_life.js"></script>|\' "@0@" > "@OUTPUT@"'
-        .format(shell_path),
-    ],
-    build_by_default: true,
+  # Alternatives 'pandoc', 'cmark-gfm', , 'markdown'
+  md = find_program('cmark', required: true, disabler: false)
+  # TODO raise error if not found
+
+  readme_html = custom_target('readme_html',
+   input  : meson.project_source_root() / 'README.md',
+   output : 'README.html',
+   command: [md, '@INPUT@'],   # all of these emit an HTML fragment to stdout
+   capture: true,
+   build_by_default: true,
+  ) 
+
+
+  result = run_command(md, 'README.md', check : true)
+  content = result.stdout().strip()
+
+  conf = configuration_data()
+  conf.set('README', content)
+
+  configure_file(
+    input:  'src/shell.html',
+    output: 'index.html',
+    configuration: conf,
+  )
+
+  configure_file(
+    input: meson.project_source_root() / 'res/icon_32.png',
+    output: 'icon_32.png',
+    copy: true
   )
 endif
 
