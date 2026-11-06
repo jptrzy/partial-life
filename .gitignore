@@ -3,7 +3,7 @@
 
 build/
 
-raylib/
-rini/
+subprojects/raylib/
+subprojects/rini/
 
 compile_commands.json
