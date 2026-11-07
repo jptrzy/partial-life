@@ -5,8 +5,14 @@
 #define RINI_MAX_TEXT_FILE_SIZE 4096*2
 #include "rini.h"
 
-#include "pal_arthur.h"
+#ifdef __EMSCRIPTEN__
+  #include <emscripten/emscripten.h>
+#endif
+
+#include "pals.h"
 #include "vec2f.h"
+
+#define PAL_DEFAULT (pal_miami)
 
 #define VERSION 1
 
@@ -41,6 +47,8 @@ typedef struct {
   Ball balls[KINDS_MAX][BALLS_MAX];
   int rels_len;
   int balls_len;
+
+  Color *pal;
 } State;
 
 float frand() {
@@ -113,9 +121,9 @@ void state_update(State *state, float dt) {
 }
 
 void state_draw(State *state) {
-  DrawCircleLines(0, 0, MAX_DIS, palette[5]);
+  DrawCircleLines(0, 0, MAX_DIS, state->pal[5]);
 
-  Color *colors = palette + 8;
+  Color *colors = state->pal + 8;
 
   if (KINDS_MAX > 16) {
     // Could it be check by a preprocessor
@@ -141,7 +149,54 @@ void state_rel_rand(State *state, float scale) {
   }
 }
 
+//Color* pal_gen() {
+//  Color *pal = malloc(sizeof(Color) * 24);
+//
+//  if (pal == NULL) {
+//    printf("FUCK YOU MALLOC DOESN'T WORK");
+//    return pal;
+//  }
+//
+//}
+
+void state_pal_set(State *state, Color *new_pal) {
+  if (new_pal == NULL) {
+    new_pal = (Color *) PAL_DEFAULT;
+  }
+
+  //if (state->pal != PAL_DEFAULT)  {
+  //  free(state->pal);
+  //}
+
+  state->pal = new_pal;
+
+  #ifdef __EMSCRIPTEN__
+    for (int i=0; i<24; i++) {
+      EM_ASM({
+        i = $0;
+        r = $1;
+        g = $2;
+        b = $3;
+        a = $4;
+
+        hex = i.toString(16).padStart(2, '0').toUpperCase();
+
+        document.documentElement.style.setProperty(
+            `--base${hex}`, `rgb(${r} ${g} ${b})`);
+      }, i, state->pal[i].r, state->pal[i].g, state->pal[i].b, state->pal[i].a);
+    }
+  #endif
+
+}
+
+void state_pal_rand(State *state) {
+  int r = rand() % (sizeof(pals) / sizeof(*pals));
+
+  state_pal_set(state, (Color *) pals[r]);
+}
+
 void state_balls_reset(State *state) {
+
   for (int k=0;k<state->rels_len;k++) {
     for (int b=0;b<state->balls_len;b++) {
       Ball *ball = &state->balls[k][b];
@@ -238,6 +293,7 @@ int main(void) {
   state.rels_len = 4;
 
   state_balls_reset(&state);
+  state_pal_set(&state, NULL);
 
   InitWindow(320, 240, "Partial Life");
   SetTargetFPS(60);
@@ -269,6 +325,7 @@ int main(void) {
     if (IsKeyPressed(KEY_Q)) state_balls_reset(&state);
     if (IsKeyPressed(KEY_C)) state_save_snap(&state);
     if (IsKeyPressed(KEY_V)) state_load_snap(&state);
+    if (IsKeyPressed(KEY_P)) state_pal_rand(&state);
 
     if (IsKeyPressed(KEY_ONE)) debug_ui = 0;
     if (IsKeyPressed(KEY_TWO)) debug_ui = 1;
@@ -277,19 +334,19 @@ int main(void) {
 
 
     BeginDrawing();
-      ClearBackground(palette[7]);
+      ClearBackground(state.pal[7]);
 
       BeginMode2D(camera);
         state_draw(&state);
       EndMode2D();
 
       if (debug_ui == 1) {
-        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, palette[0]);
+        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, state.pal[0]);
       } else if (debug_ui == 2) {
         for (int k=0;k<state.rels_len;k++) {
           for (int _k=0;_k<state.rels_len;_k++) {
             Rel rel = state.rels[k][_k];
-            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, palette[0]);
+            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, state.pal[0]);
           }
         }
       } else if (debug_ui == 3) {
@@ -308,7 +365,7 @@ int main(void) {
           "H - UI shortcuts / help",
         };
         for (unsigned int i=0; i < (sizeof(buffer) / sizeof(*buffer)); i++) {
-          DrawText(buffer[i], 2, 10 * i, 10, palette[0]);
+          DrawText(buffer[i], 2, 10 * i, 10, state.pal[0]);
         }
       }
 
