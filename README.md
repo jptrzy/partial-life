@@ -1,4 +1,4 @@
-# Partial Life
+# Partial Life [Web Build](https://jptrzy.github.io/partial-life)
 Visualisation how simple rules can result in creation of life(ish) forms.
 
 I have come up with similar idea years ago and now am implementing it in C
@@ -21,7 +21,7 @@ meson compile -C build
 ```
 meson setup build-web --cross-file web.ini
 meson compile -C build-web
-python3 -m http.server
+python3 -m http.server -d build-web
 ```
 
 ## Helpfull
