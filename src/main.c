@@ -385,19 +385,19 @@ int main(void) {
     if (IsKeyPressed(KEY_C)) debug_ui = 4;
 
     BeginDrawing();
-      ClearBackground(state.pal[7]);
+      ClearBackground(state.pal[0]);
 
       BeginMode2D(camera);
         state_draw(&state);
       EndMode2D();
 
       if (debug_ui == 1) {
-        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, state.pal[0]);
+        DrawText(TextFormat("%i FPS %.2f DT", GetFPS(), GetFrameTime()), 0, 0, 10, state.pal[7]);
       } else if (debug_ui == 2) {
         for (int k=0;k<state.rels_len;k++) {
           for (int _k=0;_k<state.rels_len;_k++) {
             Rel rel = state.rels[k][_k];
-            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, state.pal[0]);
+            DrawText(TextFormat("%f %f", rel.range, rel.force), 0, 10 * (state.rels_len * k + _k), 10, state.pal[7]);
           }
         }
       } else if (debug_ui == 3) {
@@ -420,7 +420,7 @@ int main(void) {
           "H - UI shortcuts / help",
         };
         for (unsigned int i=0; i < (sizeof(buffer) / sizeof(*buffer)); i++) {
-          DrawText(buffer[i], 2, 10 * i, 10, state.pal[0]);
+          DrawText(buffer[i], 2, 10 * i, 10, state.pal[7]);
         }
       } else if (debug_ui == 4) {
         for(int i=0; i<PAL_LEN; i++) {
