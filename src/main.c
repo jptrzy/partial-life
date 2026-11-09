@@ -1,6 +1,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "raylib.h"
+#include <math.h>
+#include <stdlib.h>
 #define RINI_IMPLEMENTATION
 #define RINI_MAX_TEXT_FILE_SIZE 4096*2
 #include "rini.h"
@@ -12,6 +14,7 @@
 #include "pals.h"
 #include "vec2f.h"
 
+#define PAL_LEN 24
 #define PAL_DEFAULT (pal_miami)
 
 #define VERSION 1
@@ -48,6 +51,7 @@ typedef struct {
   int rels_len;
   int balls_len;
 
+  Color rand_pal[PAL_LEN];
   Color *pal;
 } State;
 
@@ -287,6 +291,52 @@ int state_save_snap(State *state) {
   return 0;
 }
 
+char hsl_n(float n, float a, float light, int hue) {
+  float k = fmodf(n + ((float)hue / 30.0f), 12.0f);
+
+  float i = (light - (a * MAX(-1.0f, MIN(MIN(k - 3.0f, 9.0f - k), 1.0f))));
+
+  return (i*255.0);
+}
+
+Color hsl_to_rgb(int hue, float sat, float light) {
+  float a = sat * MIN(light, 1.0f - light);
+
+  return (Color) {
+    hsl_n(0.0f, a, light, hue),
+    hsl_n(8.0f, a, light, hue),
+    hsl_n(4.0f, a, light, hue),
+    255,
+  };
+}
+
+void pal_rand(Color *pal) {
+  // 0-7 Greyscale (Dark -> Light)
+  // 8-15 Colors
+  // 16-23 Darker Colors
+  int hue = rand() % 360;
+  float light = frand() * 0.2;
+  for (int i=0; i<8; i++) {
+    pal[i] = hsl_to_rgb(hue, light, 1.0f/9.0f*(i+1));
+  }
+
+  int hues[] = {0, 30, 120, 60, 240, 300, 260, 180};
+
+  float sat = frand() * 0.3;
+  int hue_shift = rand() % 30;
+  int idx_shift = rand() % 8;
+  for (int j=0; j<8; j++) {
+    int i = (j + idx_shift) % 8;
+    pal[j+8] = hsl_to_rgb((hues[i] + hue_shift) % 360, 0.7f + sat, 0.35+light);
+    pal[j+16] = hsl_to_rgb((hues[i] + hue_shift) % 360, 0.7f + sat, 0.2+light);
+  }
+}
+
+void state_rand_pal_set(State *state) {
+  pal_rand(state->rand_pal);
+  state_pal_set(state, state->rand_pal);
+}
+
 int main(void) {
   State state = {0};
   state.balls_len = 258;
@@ -325,13 +375,14 @@ int main(void) {
     if (IsKeyPressed(KEY_Q)) state_balls_reset(&state);
     if (IsKeyPressed(KEY_C)) state_save_snap(&state);
     if (IsKeyPressed(KEY_V)) state_load_snap(&state);
-    if (IsKeyPressed(KEY_P)) state_pal_rand(&state);
+    if (IsKeyPressed(KEY_L)) state_pal_rand(&state);
+    if (IsKeyPressed(KEY_P)) state_rand_pal_set(&state);
 
     if (IsKeyPressed(KEY_ONE)) debug_ui = 0;
     if (IsKeyPressed(KEY_TWO)) debug_ui = 1;
     if (IsKeyPressed(KEY_THREE)) debug_ui = 2;
     if (IsKeyPressed(KEY_H)) debug_ui = 3;
-
+    if (IsKeyPressed(KEY_C)) debug_ui = 4;
 
     BeginDrawing();
       ClearBackground(state.pal[7]);
@@ -359,13 +410,21 @@ int main(void) {
           "C - save snapshot to clipboard",
           "V - load snapshot from clipboard",
           "",
+          "L - load random color palette",
+          "P - generate random color palette",
+          "",
           "1 - UI diable",
           "2 - UI fps",
           "3 - UI relations",
+          "C - UI color palette",
           "H - UI shortcuts / help",
         };
         for (unsigned int i=0; i < (sizeof(buffer) / sizeof(*buffer)); i++) {
           DrawText(buffer[i], 2, 10 * i, 10, state.pal[0]);
+        }
+      } else if (debug_ui == 4) {
+        for(int i=0; i<PAL_LEN; i++) {
+          DrawRectangle(10*(i%8), 10*(i/8), 10, 10, state.pal[i]);
         }
       }
 
