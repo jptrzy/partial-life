@@ -36,3 +36,12 @@ All right reserved.
 It is published purely for learning and showcase purposes.
 
 You may not use it for AI (or any other software) learning purposes.
+
+# TODO
+- [ ] Incorporate [MicroUI](https://github.com/rxi/microui)
+- [ ] Research Fractal techniques for optimisation reasons -> QuadTree [impl example](https://github.com/bones-ai/c-blob-survival/tree/main)
+- [ ] Use shader for ball rendering -> merge them to make them more fluid like
+- [ ] Shader for background grain
+- [ ] Persistent error messages (with a timer for how they display)
+- [ ] Load example snapshots
+- [ ] Mix ball colors using some opengl functionality
