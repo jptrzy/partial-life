@@ -153,16 +153,6 @@ void state_rel_rand(State *state, float scale) {
   }
 }
 
-//Color* pal_gen() {
-//  Color *pal = malloc(sizeof(Color) * 24);
-//
-//  if (pal == NULL) {
-//    printf("FUCK YOU MALLOC DOESN'T WORK");
-//    return pal;
-//  }
-//
-//}
-
 void state_pal_set(State *state, Color *new_pal) {
   if (new_pal == NULL) {
     new_pal = (Color *) PAL_DEFAULT;
@@ -320,15 +310,12 @@ void pal_rand(Color *pal) {
     pal[i] = hsl_to_rgb(hue, light, 1.0f/9.0f*(i+1));
   }
 
-  int hues[] = {0, 30, 120, 60, 240, 300, 260, 180};
+  int hues[] = {0, 180, 45, 225, 135, 315, 90, 270};
 
   float sat = frand() * 0.3;
-  int hue_shift = rand() % 30;
-  int idx_shift = rand() % 8;
   for (int j=0; j<8; j++) {
-    int i = (j + idx_shift) % 8;
-    pal[j+8] = hsl_to_rgb((hues[i] + hue_shift) % 360, 0.7f + sat, 0.35+light);
-    pal[j+16] = hsl_to_rgb((hues[i] + hue_shift) % 360, 0.7f + sat, 0.2+light);
+    pal[j+8] = hsl_to_rgb((hues[j] + hue) % 360, 0.7f + sat, 0.35+light);
+    pal[j+16] = hsl_to_rgb((hues[j] + hue) % 360, 0.7f + sat, 0.2+light);
   }
 }
 
